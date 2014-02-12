@@ -6,6 +6,10 @@ var es = require('../');
 
 
 function findOne(ast, condition) {
+  if ('string' === typeof condition) {
+    condition = {type: condition};
+  }
+
   var result = null;
   var keys = Object.keys(condition);
 
@@ -26,79 +30,143 @@ function findOne(ast, condition) {
 
 describe('esprima-scope', function() {
   describe('analyze', function() {
+    beforeEach(function() {
+      this.code = this.currentTest.parent.title;
+    });
+
     describe('node', function() {
-      var code1 = 'var foo = 1;';
-      describe(code1, function() {
+      describe('var foo = 1;', function() {
         it('should have Program as a node', function() {
-          var ast = esprima.parse(code1);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
           expect(scope.node).to.equal(ast);
           expect(scope.node.type).to.equal('Program');
         });
       });
 
-      var code2 = 'function foo() {}';
-      describe(code2, function() {
+      describe('function foo() {}', function() {
         it('should have FunctionDeclaration as a node', function() {
-          var ast = esprima.parse(code2);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast).children[0];
-          expect(scope.node).to.equal(ast.body[0]);
-          expect(scope.node.type).to.equal('FunctionDeclaration');
+          expect(scope.node).to.equal(findOne(ast, 'FunctionDeclaration'));
+        });
+      });
+
+      describe('var foo = function() {};', function() {
+        it('should have FunctionExpression as a node', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast).children[0];
+          expect(scope.node).to.equal(findOne(ast, 'FunctionExpression'));
         });
       });
     });
 
     describe('scope chain', function() {
-      var code1 = 'var foo = 1;';
-      describe(code1, function() {
+      describe('var foo = 1;', function() {
         it('should have no scope chain', function() {
-          var ast = esprima.parse(code1);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
           expect(scope.parent).to.not.exist;
           expect(scope.children).to.eql([]);
         });
       });
 
-      var code2 = 'function foo() {};';
-      describe(code2, function() {
-        it('should have a child scope', function() {
-          var ast = esprima.parse(code2);
+      [
+        'function foo() {};',
+        'foo = function() {};'
+      ].forEach(function(code) {
+        describe(code, function() {
+          it('should have a child scope', function() {
+            var ast = esprima.parse(this.code);
+            var scope = es.analyze(ast);
+            expect(scope.parent).to.not.exist;
+            expect(scope.children).to.have.length(1);
+
+            var child = scope.children[0];
+            expect(child.parent).to.equal(scope);
+            expect(child.children).to.eql([]);
+          });
+        });
+      });
+
+      describe('function foo() {} function bar() {}', function() {
+        it('should have child scopes', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast);
+          expect(scope.parent).to.not.exist;
+          expect(scope.children).to.have.length(2);
+
+          scope.children.forEach(function(child) {
+            expect(child.parent).to.equal(scope);
+            expect(child.children).to.eql([]);
+          });
+        });
+      });
+
+      describe('function foo() { function bar() {} }', function() {
+        it('should have 2 level nested scopes', function() {
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
           expect(scope.parent).to.not.exist;
           expect(scope.children).to.have.length(1);
 
           var child = scope.children[0];
           expect(child.parent).to.equal(scope);
-          expect(child.children).to.eql([]);
+          expect(child.children).to.have.length(1);
+
+          var grandchild = child.children[0];
+          expect(grandchild.parent).to.equal(child);
+          expect(grandchild.children).to.eql([]);
         });
       });
     });
 
     describe('variables', function() {
-      var code1 = 'var foo = 1;';
-      describe(code1, function() {
+      describe('var foo = 1;', function() {
         it('should have a variable', function() {
-          var ast = esprima.parse(code1);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
-          expect(scope.variables.foo).to.eql([scope.assignments[0]]);
+          expect(scope.variables.foo).to.have.length(1);
+
+          var assignment = scope.variables.foo[0];
+          expect(assignment).to.have.property('operator', '=');
+          expect(assignment).to.have.property('scope', scope);
+          expect(assignment.left).to.have.property('type', 'Identifier');
+          expect(assignment.left).to.have.property('name', 'foo');
+          expect(assignment.right).to.have.property('type', 'Literal');
+          expect(assignment.right).to.have.property('value', 1);
         });
       });
 
-      var code2 = 'function foo() {};';
-      describe(code2, function() {
+      describe('function foo() {};', function() {
         it('should have a variable', function() {
-          var ast = esprima.parse(code2);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
-          expect(scope.variables.foo).to.eql([scope.assignments[0]]);
+          expect(scope.variables.foo).to.have.length(1);
+
+          var assignment = scope.variables.foo[0];
+          expect(assignment).to.have.property('operator', '=');
+          expect(assignment).to.have.property('scope', scope);
+          expect(assignment.left).to.have.property('type', 'Identifier');
+          expect(assignment.left).to.have.property('name', 'foo');
+          expect(assignment.right).to.have.property('type', 'FunctionDeclaration');
+        });
+      });
+
+      describe('var foo, bar;', function() {
+        it('should have variables', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast);
+          expect(scope.variables.foo).to.have.length(0);
+          expect(scope.variables.bar).to.have.length(0);
         });
       });
     });
 
     describe('assignments', function() {
-      var code1 = 'var foo = 1;';
-      describe(code1, function() {
+      describe('var foo = 1;', function() {
         it('should have an assignment', function() {
-          var ast = esprima.parse(code1);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
           expect(scope.assignments).to.have.length(1);
 
@@ -112,10 +180,9 @@ describe('esprima-scope', function() {
         });
       });
 
-      var code2 = 'function foo() {};';
-      describe(code2, function() {
+      describe('function foo() {};', function() {
         it('should have an assignment', function() {
-          var ast = esprima.parse(code2);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
           expect(scope.assignments).to.have.length(1);
 
@@ -131,24 +198,22 @@ describe('esprima-scope', function() {
     });
 
     describe('references', function() {
-      var codes = [
+      [
         'var foo = 1;',
         'function foo() {}'
-      ];
-      codes.forEach(function(code) {
+      ].forEach(function(code) {
         describe(code, function() {
           it('should have no reference', function() {
-            var ast = esprima.parse(code);
+            var ast = esprima.parse(this.code);
             var scope = es.analyze(ast);
             expect(scope.references).to.eql([]);
           });
         });
       });
 
-      var code1 = 'new Date().getTime();';
-      describe(code1, function() {
+      describe('new Date().getTime();', function() {
         it('should have a reference', function() {
-          var ast = esprima.parse(code1);
+          var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
 
           expect(scope.references).to.eql([
@@ -156,6 +221,25 @@ describe('esprima-scope', function() {
           ]);
         });
       });
+    });
+  });
+
+  describe('isScopeRequired', function() {
+    it('should be true for Program', function() {
+      var ast = esprima.parse('');
+      expect(es.isScopeRequired(ast)).to.be.true;
+    });
+
+    it('should be true for FunctionExpression', function() {
+      var ast = esprima.parse('var foo = function() {};');
+      var node = findOne(ast, 'FunctionExpression');
+      expect(es.isScopeRequired(node)).to.be.true;
+    });
+
+    it('should be true for FunctionDeclaration', function() {
+      var ast = esprima.parse('function foo() {};');
+      var node = findOne(ast, 'FunctionDeclaration');
+      expect(es.isScopeRequired(node)).to.be.true;
     });
   });
 });
