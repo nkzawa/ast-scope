@@ -126,15 +126,10 @@ describe('esprima-scope', function() {
         it('should have a variable', function() {
           var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
-          expect(scope.variables.foo).to.have.length(1);
-
-          var assignment = scope.variables.foo[0];
-          expect(assignment).to.have.property('operator', '=');
-          expect(assignment).to.have.property('scope', scope);
-          expect(assignment.left).to.have.property('type', 'Identifier');
-          expect(assignment.left).to.have.property('name', 'foo');
-          expect(assignment.right).to.have.property('type', 'Literal');
-          expect(assignment.right).to.have.property('value', 1);
+          var foo = scope.variables.foo;
+          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.assignments).to.have.length(1);
+          expect(foo.assignments[0]).to.have.property('node', findOne(ast, 'VariableDeclarator'));
         });
       });
 
@@ -142,14 +137,10 @@ describe('esprima-scope', function() {
         it('should have a variable', function() {
           var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
-          expect(scope.variables.foo).to.have.length(1);
-
-          var assignment = scope.variables.foo[0];
-          expect(assignment).to.have.property('operator', '=');
-          expect(assignment).to.have.property('scope', scope);
-          expect(assignment.left).to.have.property('type', 'Identifier');
-          expect(assignment.left).to.have.property('name', 'foo');
-          expect(assignment.right).to.have.property('type', 'FunctionDeclaration');
+          var foo = scope.variables.foo;
+          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.assignments).to.have.length(1);
+          expect(foo.assignments[0]).to.have.property('node', findOne(ast, 'FunctionDeclaration'));
         });
       });
 
@@ -157,8 +148,13 @@ describe('esprima-scope', function() {
         it('should have variables', function() {
           var ast = esprima.parse(this.code);
           var scope = es.analyze(ast);
-          expect(scope.variables.foo).to.have.length(0);
-          expect(scope.variables.bar).to.have.length(0);
+          var foo = scope.variables.foo;
+          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.assignments).to.have.length(0);
+
+          var bar = scope.variables.bar;
+          expect(bar).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'bar'}));
+          expect(bar.assignments).to.have.length(0);
         });
       });
     });
