@@ -181,6 +181,14 @@ describe('esprima-scope', function() {
         });
       });
 
+      describe('var foo;', function() {
+        it('should have no assignment', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast);
+          expect(scope.assignments).to.have.length(0);
+        });
+      });
+
       describe('var foo = 1;', function() {
         it('should have an assignment', function() {
           var ast = esprima.parse(this.code);
