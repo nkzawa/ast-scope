@@ -164,6 +164,23 @@ describe('esprima-scope', function() {
     });
 
     describe('assignments', function() {
+      describe('foo = 1;', function() {
+        it('should have an assignment', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast);
+          expect(scope.assignments).to.have.length(1);
+
+          var assignment = scope.assignments[0];
+          var node = findOne(ast, 'AssignmentExpression');
+
+          expect(assignment).to.have.property('node', node);
+          expect(assignment).to.have.property('operator', '=');
+          expect(assignment).to.have.property('scope', scope);
+          expect(assignment).to.have.property('left', node.left);
+          expect(assignment).to.have.property('right', node.right);
+        });
+      });
+
       describe('var foo = 1;', function() {
         it('should have an assignment', function() {
           var ast = esprima.parse(this.code);
@@ -171,12 +188,13 @@ describe('esprima-scope', function() {
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
-          var declaration = ast.body[0].declarations[0];
+          var node = findOne(ast, 'VariableDeclarator');
 
+          expect(assignment).to.have.property('node', node);
           expect(assignment).to.have.property('operator', '=');
           expect(assignment).to.have.property('scope', scope);
-          expect(assignment).to.have.property('left', declaration.id);
-          expect(assignment).to.have.property('right', declaration.init);
+          expect(assignment).to.have.property('left', node.id);
+          expect(assignment).to.have.property('right', node.init);
         });
       });
 
@@ -187,12 +205,27 @@ describe('esprima-scope', function() {
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
-          var declaration = ast.body[0];
+          var node = findOne(ast, 'FunctionDeclaration');
 
+          expect(assignment).to.have.property('node', node);
           expect(assignment).to.have.property('operator', '=');
           expect(assignment).to.have.property('scope', scope);
-          expect(assignment).to.have.property('left', declaration.id);
-          expect(assignment).to.have.property('right', declaration);
+          expect(assignment).to.have.property('left', node.id);
+          expect(assignment).to.have.property('right', node);
+        });
+      });
+
+      describe('(function() { foo = 1; })();', function() {
+        it('should have an assignment within scope', function() {
+          var ast = esprima.parse(this.code);
+          var scope = es.analyze(ast).children[0];
+          expect(scope.assignments).to.have.length(1);
+
+          var assignment = scope.assignments[0];
+          var node = findOne(scope.node, 'AssignmentExpression');
+
+          expect(assignment).to.have.property('node', node);
+          expect(assignment).to.have.property('scope', scope);
         });
       });
     });
