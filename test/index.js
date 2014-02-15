@@ -3,30 +3,8 @@ var expect = require('chai').expect;
 var esprima = require('esprima');
 var estraverse = require('estraverse');
 var as = require('../');
+var findOne = require('./support').findOne;
 
-
-function findOne(ast, condition) {
-  if ('string' === typeof condition) {
-    condition = {type: condition};
-  }
-
-  var result = null;
-  var keys = Object.keys(condition);
-
-  estraverse.traverse(ast, {
-    enter: function(node) {
-      var matched = keys.every(function(k) {
-        return node[k] === condition[k];
-      });
-
-      if (!matched) return;
-
-      result = node;
-      this.break();
-    }
-  });
-  return result;
-}
 
 describe('esprima-scope', function() {
   describe('analyze', function() {
@@ -248,35 +226,37 @@ describe('esprima-scope', function() {
         });
       });
 
+      describe('var foo = 1; foo;', function() {
+        it('should have a reference', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+
+          expect(scope.references).to.have.length(1);
+
+          var reference = scope.references[0];
+          expect(reference).to.have.property('node', findOne(ast.body[1], {type: 'Identifier', name: 'foo'}));
+          expect(reference).to.have.property('scope', scope);
+
+          var variable = scope.variables.foo;
+          expect(reference).to.have.property('variable', variable);
+          expect(variable.references).to.have.length(1);
+          expect(variable.references[0]).to.equal(reference);
+        });
+      });
+
       describe('new Date().getTime();', function() {
         it('should have a reference', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
 
-          expect(scope.references).to.eql([
-            findOne(ast, {type: 'Identifier', name: 'Date'})
-          ]);
+          expect(scope.references).to.have.length(1);
+
+          var reference = scope.references[0];
+          expect(reference).to.have.property('node', findOne(ast, 'CallExpression'));
+          expect(reference).to.have.property('scope', scope);
+          expect(reference).to.have.property('variable', null);
         });
       });
-    });
-  });
-
-  describe('isScopeRequired', function() {
-    it('should be true for Program', function() {
-      var ast = esprima.parse('');
-      expect(as.isScopeRequired(ast)).to.be.true;
-    });
-
-    it('should be true for FunctionExpression', function() {
-      var ast = esprima.parse('var foo = function() {};');
-      var node = findOne(ast, 'FunctionExpression');
-      expect(as.isScopeRequired(node)).to.be.true;
-    });
-
-    it('should be true for FunctionDeclaration', function() {
-      var ast = esprima.parse('function foo() {};');
-      var node = findOne(ast, 'FunctionDeclaration');
-      expect(as.isScopeRequired(node)).to.be.true;
     });
   });
 });
