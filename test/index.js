@@ -2,7 +2,7 @@ var fs = require('fs');
 var expect = require('chai').expect;
 var esprima = require('esprima');
 var estraverse = require('estraverse');
-var es = require('../');
+var as = require('../');
 
 
 function findOne(ast, condition) {
@@ -38,7 +38,7 @@ describe('esprima-scope', function() {
       describe('var foo = 1;', function() {
         it('should have Program as a node', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.node).to.equal(ast);
           expect(scope.node.type).to.equal('Program');
         });
@@ -47,7 +47,7 @@ describe('esprima-scope', function() {
       describe('function foo() {}', function() {
         it('should have FunctionDeclaration as a node', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast).children[0];
+          var scope = as.analyze(ast).children[0];
           expect(scope.node).to.equal(findOne(ast, 'FunctionDeclaration'));
         });
       });
@@ -55,7 +55,7 @@ describe('esprima-scope', function() {
       describe('var foo = function() {};', function() {
         it('should have FunctionExpression as a node', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast).children[0];
+          var scope = as.analyze(ast).children[0];
           expect(scope.node).to.equal(findOne(ast, 'FunctionExpression'));
         });
       });
@@ -65,7 +65,7 @@ describe('esprima-scope', function() {
       describe('var foo = 1;', function() {
         it('should have no scope chain', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.parent).to.not.exist;
           expect(scope.children).to.eql([]);
         });
@@ -78,7 +78,7 @@ describe('esprima-scope', function() {
         describe(code, function() {
           it('should have a child scope', function() {
             var ast = esprima.parse(this.code);
-            var scope = es.analyze(ast);
+            var scope = as.analyze(ast);
             expect(scope.parent).to.not.exist;
             expect(scope.children).to.have.length(1);
 
@@ -92,7 +92,7 @@ describe('esprima-scope', function() {
       describe('function foo() {} function bar() {}', function() {
         it('should have child scopes', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.parent).to.not.exist;
           expect(scope.children).to.have.length(2);
 
@@ -106,7 +106,7 @@ describe('esprima-scope', function() {
       describe('function foo() { function bar() {} }', function() {
         it('should have 2 level nested scopes', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.parent).to.not.exist;
           expect(scope.children).to.have.length(1);
 
@@ -125,7 +125,7 @@ describe('esprima-scope', function() {
       describe('var foo = 1;', function() {
         it('should have a variable', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           var foo = scope.variables.foo;
           expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
           expect(foo.assignments).to.have.length(1);
@@ -136,7 +136,7 @@ describe('esprima-scope', function() {
       describe('function foo() {};', function() {
         it('should have a variable', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           var foo = scope.variables.foo;
           expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
           expect(foo.assignments).to.have.length(1);
@@ -147,7 +147,7 @@ describe('esprima-scope', function() {
       describe('var foo, bar;', function() {
         it('should have variables', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           var foo = scope.variables.foo;
           expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
           expect(foo.assignments).to.have.length(0);
@@ -163,7 +163,7 @@ describe('esprima-scope', function() {
       describe('foo = 1;', function() {
         it('should have an assignment', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
@@ -180,7 +180,7 @@ describe('esprima-scope', function() {
       describe('var foo;', function() {
         it('should have no assignment', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.assignments).to.have.length(0);
         });
       });
@@ -188,7 +188,7 @@ describe('esprima-scope', function() {
       describe('var foo = 1;', function() {
         it('should have an assignment', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
@@ -205,7 +205,7 @@ describe('esprima-scope', function() {
       describe('function foo() {};', function() {
         it('should have an assignment', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
@@ -222,7 +222,7 @@ describe('esprima-scope', function() {
       describe('(function() { foo = 1; })();', function() {
         it('should have an assignment within scope', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast).children[0];
+          var scope = as.analyze(ast).children[0];
           expect(scope.assignments).to.have.length(1);
 
           var assignment = scope.assignments[0];
@@ -242,7 +242,7 @@ describe('esprima-scope', function() {
         describe(code, function() {
           it('should have no reference', function() {
             var ast = esprima.parse(this.code);
-            var scope = es.analyze(ast);
+            var scope = as.analyze(ast);
             expect(scope.references).to.eql([]);
           });
         });
@@ -251,7 +251,7 @@ describe('esprima-scope', function() {
       describe('new Date().getTime();', function() {
         it('should have a reference', function() {
           var ast = esprima.parse(this.code);
-          var scope = es.analyze(ast);
+          var scope = as.analyze(ast);
 
           expect(scope.references).to.eql([
             findOne(ast, {type: 'Identifier', name: 'Date'})
@@ -264,19 +264,19 @@ describe('esprima-scope', function() {
   describe('isScopeRequired', function() {
     it('should be true for Program', function() {
       var ast = esprima.parse('');
-      expect(es.isScopeRequired(ast)).to.be.true;
+      expect(as.isScopeRequired(ast)).to.be.true;
     });
 
     it('should be true for FunctionExpression', function() {
       var ast = esprima.parse('var foo = function() {};');
       var node = findOne(ast, 'FunctionExpression');
-      expect(es.isScopeRequired(node)).to.be.true;
+      expect(as.isScopeRequired(node)).to.be.true;
     });
 
     it('should be true for FunctionDeclaration', function() {
       var ast = esprima.parse('function foo() {};');
       var node = findOne(ast, 'FunctionDeclaration');
-      expect(es.isScopeRequired(node)).to.be.true;
+      expect(as.isScopeRequired(node)).to.be.true;
     });
   });
 });

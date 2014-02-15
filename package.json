@@ -1,7 +1,7 @@
 {
-  "name": "esprima-scope",
+  "name": "ast-scope",
   "version": "0.0.1",
-  "description": "A JavaScript scope analyzer",
+  "description": "A JavaScript AST scope analyzer",
   "scripts": {
     "test": "node_modules/.bin/mocha --reporter dot"
   },
