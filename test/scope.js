@@ -24,5 +24,11 @@ describe('Scope', function() {
       var node = findOne(ast, 'FunctionDeclaration');
       expect(Scope.isRequired(node)).to.be.true;
     });
+
+    it('should be true for CatchClause', function() {
+      var ast = esprima.parse('try {} catch (e) {}');
+      var node = findOne(ast, 'CatchClause');
+      expect(Scope.isRequired(ast)).to.be.true;
+    });
   });
 });

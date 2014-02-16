@@ -135,6 +135,15 @@ describe('esprima-scope', function() {
           expect(bar.assignments).to.have.length(0);
         });
       });
+
+      describe('try {} catch (e) {}', function() {
+        it('should have a variable in CatchClause', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var e = scope.children[0].variables.e;
+          expect(e).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'e'}));
+        });
+      });
     });
 
     describe('assignments', function() {
