@@ -186,6 +186,11 @@ describe('esprima-scope', function() {
           expect(assignment).to.have.property('scope', scope);
           expect(assignment).to.have.property('left', node.id);
           expect(assignment).to.have.property('right', node.init);
+
+          var variable = scope.variables.foo;
+          expect(assignment).to.have.property('variable', variable);
+          expect(variable.assignments).to.have.length(1);
+          expect(variable.assignments[0]).to.equal(assignment);
         });
       });
 
