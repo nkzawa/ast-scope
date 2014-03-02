@@ -271,6 +271,16 @@ describe('esprima-scope', function() {
           expect(reference).to.have.property('variable', null);
         });
       });
+
+      describe('[foo].slice();', function() {
+        it('should have references', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+
+          expect(scope.references).to.have.length(1);
+          expect(scope.references[0].node.name).to.equal('foo');
+        });
+      });
     });
   });
 });
