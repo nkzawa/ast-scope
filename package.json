@@ -2,11 +2,21 @@
   "name": "ast-scope",
   "version": "0.1.1",
   "description": "A JavaScript AST scope analyzer",
+  "keywords": [
+    "ast",
+    "esprima",
+    "scope",
+    "analyze"
+  ],
   "scripts": {
-    "test": "node_modules/.bin/mocha --reporter dot"
+    "test": "mocha --reporter dot"
   },
-  "author": "",
+  "author": "Naoyuki Kanezawa <naoyuki.kanezawa@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nkzawa/ast-scope.git"
+  },
   "dependencies": {
     "estraverse": "~1.5.0"
   },
