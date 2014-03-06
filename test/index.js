@@ -227,34 +227,48 @@ describe('esprima-scope', function() {
     });
 
     describe('references', function() {
-      [
-        'var foo = 1;',
-        'function foo() {}'
-      ].forEach(function(code) {
-        describe(code, function() {
-          it('should have no reference', function() {
-            var ast = esprima.parse(this.code);
-            var scope = as.analyze(ast);
-            expect(scope.references).to.eql([]);
-          });
+      describe('var foo;', function() {
+        it('should have no reference', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.references).to.have.length(0);
         });
       });
 
-      describe('var foo = 1; foo;', function() {
+      describe('var foo = 1;', function() {
         it('should have a reference', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.references).to.have.length(1);
+
+          var ref = scope.references[0];
+          expect(ref).to.have.property('node', findOne(ast, {name: 'foo'}));
+          expect(ref).to.have.property('scope', scope);
+        });
+      });
+
+      describe('function foo() {}', function() {
+        it('should have a reference', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.references).to.have.length(1);
+
+          var ref = scope.references[0];
+          expect(ref).to.have.property('node', findOne(ast, {name: 'foo'}));
+          expect(ref).to.have.property('scope', scope);
+        });
+      });
+
+      describe('foo;', function() {
+        it('should have a references', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
 
           expect(scope.references).to.have.length(1);
 
           var reference = scope.references[0];
-          expect(reference).to.have.property('node', findOne(ast.body[1], {type: 'Identifier', name: 'foo'}));
+          expect(reference).to.have.property('node', findOne(ast, {name: 'foo'}));
           expect(reference).to.have.property('scope', scope);
-
-          var variable = scope.variables.foo;
-          expect(reference).to.have.property('variable', variable);
-          expect(variable.references).to.have.length(1);
-          expect(variable.references[0]).to.equal(reference);
         });
       });
 
