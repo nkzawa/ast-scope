@@ -6,7 +6,7 @@ var as = require('../');
 var findOne = require('./support').findOne;
 
 
-describe('esprima-scope', function() {
+describe('ast-scope', function() {
   describe('analyze', function() {
     beforeEach(function() {
       this.code = this.currentTest.parent.title;
@@ -106,8 +106,8 @@ describe('esprima-scope', function() {
           var scope = as.analyze(ast);
           var foo = scope.variables.foo;
           expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo).to.have.property('scope', scope);
           expect(foo.assignments).to.have.length(1);
-          expect(foo.assignments[0]).to.have.property('node', findOne(ast, 'VariableDeclarator'));
         });
       });
 
@@ -117,6 +117,7 @@ describe('esprima-scope', function() {
           var scope = as.analyze(ast);
           var foo = scope.variables.foo;
           expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo).to.have.property('scope', scope);
           expect(foo.assignments).to.have.length(1);
           expect(foo.assignments[0]).to.have.property('node', findOne(ast, 'FunctionDeclaration'));
         });
@@ -142,6 +143,30 @@ describe('esprima-scope', function() {
           var scope = as.analyze(ast);
           var e = scope.children[0].variables.e;
           expect(e).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'e'}));
+        });
+      });
+    });
+
+    describe('undeclaredVariables', function() {
+      describe('foo = 1;', function() {
+        it('should have a undeclared variable', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var foo = scope.undeclaredVariables.foo;
+          expect(foo.node).to.eql({type: 'Identifier', name: 'foo'});
+          expect(foo.scope).to.be.empty;
+          expect(foo.assignments).to.have.length(1);
+          expect(foo.references).to.have.length(1);
+        });
+      });
+
+      describe('(function() {foo = 1;})();', function() {
+        it('should have a undeclared variable on top level scope', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var foo = scope.undeclaredVariables.foo;
+          expect(foo.node).to.eql({type: 'Identifier', name: 'foo'});
+          expect(foo.scope).to.be.empty;
         });
       });
     });
@@ -267,8 +292,9 @@ describe('esprima-scope', function() {
           expect(scope.references).to.have.length(1);
 
           var reference = scope.references[0];
-          expect(reference).to.have.property('node', findOne(ast, {name: 'foo'}));
-          expect(reference).to.have.property('scope', scope);
+          expect(reference.node).to.equal(findOne(ast, {name: 'foo'}));
+          expect(reference.scope).to.equal(scope);
+          expect(reference.variable).to.equal(scope.undeclaredVariables.foo);
         });
       });
 
@@ -280,14 +306,14 @@ describe('esprima-scope', function() {
           expect(scope.references).to.have.length(1);
 
           var reference = scope.references[0];
-          expect(reference).to.have.property('node', findOne(ast, 'CallExpression'));
-          expect(reference).to.have.property('scope', scope);
-          expect(reference).to.have.property('variable', null);
+          expect(reference.node).to.equal(findOne(ast, 'CallExpression'));
+          expect(reference.scope).to.equal(scope);
+          expect(reference.variable).to.equal(scope.undeclaredVariables.Date);
         });
       });
 
       describe('[foo].slice();', function() {
-        it('should have references', function() {
+        it('should have a reference', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
 
