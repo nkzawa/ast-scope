@@ -153,6 +153,30 @@ describe('ast-scope', function() {
         });
       });
 
+      describe('this;', function() {
+        it('should have a variable', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var _this = scope.variables['this'];
+          expect(_this.name).to.equal('this');
+          expect(_this.node).to.not.exist;
+          expect(_this.scope).to.equal(scope);
+          expect(_this.references).to.have.length(1);
+        });
+      });
+
+      describe('arguments;', function() {
+        it('should have a variable', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var args = scope.variables.arguments;
+          expect(args.name).to.equal('arguments');
+          expect(args.node).to.not.exist;
+          expect(args.scope).to.equal(scope);
+          expect(args.references).to.have.length(1);
+        });
+      });
+
       describe('try {} catch (e) {}', function() {
         it('should have a variable in CatchClause', function() {
           var ast = esprima.parse(this.code);
@@ -171,7 +195,7 @@ describe('ast-scope', function() {
           var foo = scope.undefinedVariables.foo;
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
-          expect(foo.scope).to.be.empty;
+          expect(foo.scope).to.not.exist;
           expect(foo.declarations).to.have.length(0);
           expect(foo.assignments).to.have.length(1);
           expect(foo.references).to.have.length(1);
@@ -185,7 +209,7 @@ describe('ast-scope', function() {
           var foo = scope.undefinedVariables.foo;
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
-          expect(foo.scope).to.be.empty;
+          expect(foo.scope).to.not.exist;
         });
       });
     });
