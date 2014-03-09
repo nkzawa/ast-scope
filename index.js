@@ -5,3 +5,4 @@ exports.Scope = require('./lib/scope');
 exports.Assignment = require('./lib/assignment');
 exports.Variable = require('./lib/variable');
 exports.Reference = require('./lib/reference');
+exports.utils = require('./lib/utils');
