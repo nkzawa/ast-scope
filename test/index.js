@@ -187,12 +187,12 @@ describe('ast-scope', function() {
       });
     });
 
-    describe('undefinedVariables', function() {
+    describe('unscopedVariables', function() {
       describe('foo = 1;', function() {
         it('should have a undeclared variable', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.undefinedVariables.foo;
+          var foo = scope.unscopedVariables.foo;
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
           expect(foo.scope).to.not.exist;
@@ -206,7 +206,7 @@ describe('ast-scope', function() {
         it('should have a undeclared variable on top level scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.undefinedVariables.foo;
+          var foo = scope.unscopedVariables.foo;
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
           expect(foo.scope).to.not.exist;
@@ -337,7 +337,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, {name: 'foo'}));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.undefinedVariables.foo);
+          expect(reference.variable).to.equal(scope.unscopedVariables.foo);
         });
       });
 
@@ -351,7 +351,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, 'CallExpression'));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.undefinedVariables.Date);
+          expect(reference.variable).to.equal(scope.unscopedVariables.Date);
         });
       });
 
