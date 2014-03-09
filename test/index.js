@@ -364,6 +364,23 @@ describe('ast-scope', function() {
           expect(scope.references[0].node.name).to.equal('foo');
         });
       });
+
+      describe('foo = 1; var foo;', function() {
+        it('should support hoisting', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.references[0].variable).to.equal(scope.variables.foo);
+        });
+      });
+
+      describe('foo(); function foo() {};', function() {
+        it('should support hoisting', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.references[0].variable).to.equal(scope.variables.foo);
+          expect(scope.references[1].variable).to.equal(scope.variables.foo);
+        });
+      });
     });
   });
 });
