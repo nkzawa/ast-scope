@@ -105,8 +105,10 @@ describe('ast-scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
           var foo = scope.variables.foo;
-          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
-          expect(foo).to.have.property('scope', scope);
+          expect(foo.name).to.equal('foo');
+          expect(foo.node).to.equal(findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.scope).to.equal(scope);
+          expect(foo.declarations).to.have.length(1);
           expect(foo.assignments).to.have.length(1);
         });
       });
@@ -116,10 +118,13 @@ describe('ast-scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
           var foo = scope.variables.foo;
-          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
-          expect(foo).to.have.property('scope', scope);
+          expect(foo.name).to.equal('foo');
+          expect(foo.node).to.equal(findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.scope).to.equal(scope);
+          expect(foo.declarations).to.have.length(1);
+          expect(foo.declarations[0]).to.equal(findOne(ast, 'FunctionDeclaration'));
           expect(foo.assignments).to.have.length(1);
-          expect(foo.assignments[0]).to.have.property('node', findOne(ast, 'FunctionDeclaration'));
+          expect(foo.assignments[0].node).to.equal(findOne(ast, 'FunctionDeclaration'));
         });
       });
 
@@ -128,12 +133,23 @@ describe('ast-scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
           var foo = scope.variables.foo;
-          expect(foo).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'foo'}));
+          expect(foo.name).to.equal('foo');
+          expect(foo.node).to.equal(findOne(ast, {type: 'Identifier', name: 'foo'}));
           expect(foo.assignments).to.have.length(0);
 
           var bar = scope.variables.bar;
-          expect(bar).to.have.property('node', findOne(ast, {type: 'Identifier', name: 'bar'}));
+          expect(foo.name).to.equal('foo');
+          expect(bar.node).to.equal(findOne(ast, {type: 'Identifier', name: 'bar'}));
           expect(bar.assignments).to.have.length(0);
+        });
+      });
+
+      describe('var foo, foo;', function() {
+        it('should have 2 declarations', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          var foo = scope.variables.foo;
+          expect(foo.declarations).to.have.length(2);
         });
       });
 
@@ -147,14 +163,16 @@ describe('ast-scope', function() {
       });
     });
 
-    describe('undeclaredVariables', function() {
+    describe('undefinedVariables', function() {
       describe('foo = 1;', function() {
         it('should have a undeclared variable', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.undeclaredVariables.foo;
-          expect(foo.node).to.eql({type: 'Identifier', name: 'foo'});
+          var foo = scope.undefinedVariables.foo;
+          expect(foo.name).to.equal('foo');
+          expect(foo.node).to.not.exist;
           expect(foo.scope).to.be.empty;
+          expect(foo.declarations).to.have.length(0);
           expect(foo.assignments).to.have.length(1);
           expect(foo.references).to.have.length(1);
         });
@@ -164,8 +182,9 @@ describe('ast-scope', function() {
         it('should have a undeclared variable on top level scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.undeclaredVariables.foo;
-          expect(foo.node).to.eql({type: 'Identifier', name: 'foo'});
+          var foo = scope.undefinedVariables.foo;
+          expect(foo.name).to.equal('foo');
+          expect(foo.node).to.not.exist;
           expect(foo.scope).to.be.empty;
         });
       });
@@ -294,7 +313,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, {name: 'foo'}));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.undeclaredVariables.foo);
+          expect(reference.variable).to.equal(scope.undefinedVariables.foo);
         });
       });
 
@@ -308,7 +327,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, 'CallExpression'));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.undeclaredVariables.Date);
+          expect(reference.variable).to.equal(scope.undefinedVariables.Date);
         });
       });
 
