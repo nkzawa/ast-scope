@@ -374,7 +374,19 @@ describe('ast-scope', function() {
           var scope = as.analyze(ast);
 
           expect(scope.references).to.have.length(1);
-          expect(scope.references[0].node.name).to.equal('foo');
+          expect(scope.references[0].id.name).to.equal('foo');
+        });
+      });
+
+      describe('foo[bar][baz]', function() {
+        it('should have a reference', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+
+          expect(scope.references).to.have.length(3);
+          expect(scope.references[0].id.name).to.equal('foo');
+          expect(scope.references[1].id.name).to.equal('baz');
+          expect(scope.references[2].id.name).to.equal('bar');
         });
       });
 
