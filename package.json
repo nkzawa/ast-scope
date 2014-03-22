@@ -1,6 +1,6 @@
 {
   "name": "ast-scope",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A JavaScript AST scope analyzer",
   "keywords": [
     "ast",
@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "esprima": "~1.0.4",
-    "mocha": "~1.17.1",
-    "chai": "~1.9.0"
+    "mocha": "~1.18.2",
+    "chai": "~1.9.1"
   }
 }
