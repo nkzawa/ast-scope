@@ -212,6 +212,19 @@ describe('ast-scope', function() {
           expect(foo.scope).to.not.exist;
         });
       });
+
+      describe('undefined; this.value = 1;', function() {
+        it('should have undefined and this as variables', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+
+          expect(Object.keys(scope.variables)).to.have.length(1);
+          expect(scope.variables.this).to.exist;
+
+          expect(Object.keys(scope.unscopedVariables)).to.have.length(1);
+          expect(scope.unscopedVariables.undefined).to.exist;
+        });
+      });
     });
 
     describe('assignments', function() {

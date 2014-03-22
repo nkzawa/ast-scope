@@ -41,4 +41,18 @@ describe('utils', function() {
       expect(utils.extractId(node)).to.eql({type: 'ThisExpression'});
     });
   });
+
+  describe('extractId', function() {
+    it('should extract name for Identifier', function() {
+      var ast = esprima.parse('foo;');
+      var node = ast.body[0].expression;
+      expect(utils.extractName(node)).to.equal('foo');
+    });
+
+    it('should extract name for ThisExpression', function() {
+      var ast = esprima.parse('this;');
+      var node = ast.body[0].expression;
+      expect(utils.extractName(node)).to.equal('this');
+    });
+  });
 });
