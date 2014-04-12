@@ -201,7 +201,7 @@ describe('ast-scope', function() {
         it('should have a undeclared variable', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.unscopedVariables.foo;
+          var foo = scope.getUnscopedVariable('foo');
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
           expect(foo.scope).to.not.exist;
@@ -215,7 +215,7 @@ describe('ast-scope', function() {
         it('should have a undeclared variable on top level scope', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-          var foo = scope.unscopedVariables.foo;
+          var foo = scope.getUnscopedVariable('foo');
           expect(foo.name).to.equal('foo');
           expect(foo.node).to.not.exist;
           expect(foo.scope).to.not.exist;
@@ -226,12 +226,20 @@ describe('ast-scope', function() {
         it('should have undefined and this as variables', function() {
           var ast = esprima.parse(this.code);
           var scope = as.analyze(ast);
-
           expect(scope.variables).to.have.length(1);
           expect(scope.getVariable('this')).to.exist;
 
-          expect(Object.keys(scope.unscopedVariables)).to.have.length(1);
-          expect(scope.unscopedVariables.undefined).to.exist;
+          expect(scope.unscopedVariables).to.have.length(1);
+          expect(scope.getUnscopedVariable('undefined')).to.exist;
+        });
+      });
+
+      describe('constructor;', function() {
+        it('should support "constructor"', function() {
+          var ast = esprima.parse(this.code);
+          var scope = as.analyze(ast);
+          expect(scope.unscopedVariables).to.have.length(1);
+          expect(scope.getUnscopedVariable('constructor')).to.exist;
         });
       });
     });
@@ -359,7 +367,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, {name: 'foo'}));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.unscopedVariables.foo);
+          expect(reference.variable).to.equal(scope.getUnscopedVariable('foo'));
         });
       });
 
@@ -373,7 +381,7 @@ describe('ast-scope', function() {
           var reference = scope.references[0];
           expect(reference.node).to.equal(findOne(ast, 'CallExpression'));
           expect(reference.scope).to.equal(scope);
-          expect(reference.variable).to.equal(scope.unscopedVariables.Date);
+          expect(reference.variable).to.equal(scope.getUnscopedVariable('Date'));
         });
       });
 
